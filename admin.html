@@ -821,9 +821,55 @@ function loadLeaderboardAdmin() {
    REVENUE
 ===================================================== */
 
+const ALLOWED_PAYMENT_METHODS = [
+    'Google Pay', 'PhonePe', 'Paytm', 'BHIM', 'Amazon Pay',
+    'CRED', 'MobiKwik', 'PayZapp', 'Airtel Payments Bank',
+    'WhatsApp Pay', 'Bank Transfer', 'Credit Card',
+    'Debit Card', 'Cash', 'Other'
+];
+
+const UPI_PAYMENT_METHODS = [
+    'Google Pay', 'PhonePe', 'Paytm', 'BHIM', 'Amazon Pay',
+    'CRED', 'MobiKwik', 'PayZapp', 'Airtel Payments Bank',
+    'WhatsApp Pay'
+];
+
 /* Prototype-only admin authorization. Production implementation must enforce role-based authorization on a secure backend. */
 
 let currentRevId = null;
+
+function updatePaymentReferenceField() {
+  const method = document.getElementById('rev-form-payment').value;
+  const label = document.getElementById('rev-form-ref-label');
+  const input = document.getElementById('rev-form-ref');
+  const helper = document.getElementById('rev-form-ref-helper');
+  
+  if (UPI_PAYMENT_METHODS.includes(method)) {
+    label.textContent = 'UPI Transaction Reference / RRN *';
+    input.placeholder = 'Enter 12-digit UPI RRN';
+    input.setAttribute('inputmode', 'numeric');
+    input.setAttribute('maxlength', '12');
+    input.setAttribute('pattern', '[0-9]{12}');
+    helper.style.display = 'block';
+    
+    // Strip non-digits in case of pre-filled invalid values
+    input.value = input.value.replace(/\D/g, '').slice(0, 12);
+  } else {
+    label.textContent = 'Transaction Reference / ID *';
+    input.placeholder = 'Enter transaction/reference ID';
+    input.removeAttribute('inputmode');
+    input.removeAttribute('maxlength');
+    input.removeAttribute('pattern');
+    helper.style.display = 'none';
+  }
+}
+
+function validateReferenceInput(input) {
+  const method = document.getElementById('rev-form-payment').value;
+  if (UPI_PAYMENT_METHODS.includes(method)) {
+    input.value = input.value.replace(/\D/g, '').slice(0, 12);
+  }
+}
 
 function loadRevenueAdmin() {
   const tbody = document.getElementById('revenue-tbody');
@@ -1007,8 +1053,13 @@ function openRevenueModal(id = null) {
   const form = document.getElementById('rev-form');
   const title = document.getElementById('rev-modal-title');
   const delBtn = document.getElementById('rev-delete-btn');
+  const paymentSelect = document.getElementById('rev-form-payment');
   
   form.reset();
+  
+  // Remove any temporary option from previous edits
+  const tempOption = paymentSelect.querySelector('option[data-temp="true"]');
+  if (tempOption) tempOption.remove();
   
   if (id) {
     title.textContent = 'Edit Revenue';
@@ -1023,7 +1074,17 @@ function openRevenueModal(id = null) {
       document.getElementById('rev-form-fee').value = r.platformFee;
       document.getElementById('rev-form-cost').value = r.operationalCost;
       document.getElementById('rev-form-status').value = r.status;
-      document.getElementById('rev-form-payment').value = r.paymentMethod || '';
+      
+      const paymentVal = r.paymentMethod || '';
+      if (paymentVal && !ALLOWED_PAYMENT_METHODS.includes(paymentVal)) {
+        const opt = document.createElement('option');
+        opt.value = paymentVal;
+        opt.textContent = paymentVal + ' (Invalid)';
+        opt.setAttribute('data-temp', 'true');
+        paymentSelect.appendChild(opt);
+      }
+      paymentSelect.value = paymentVal;
+      
       document.getElementById('rev-form-ref').value = r.reference || '';
       document.getElementById('rev-form-date').value = r.date;
       calcNetRevenue();
@@ -1034,6 +1095,8 @@ function openRevenueModal(id = null) {
     document.getElementById('rev-form-date').value = new Date().toISOString().split('T')[0];
     calcNetRevenue();
   }
+  
+  updatePaymentReferenceField();
   
   modal.style.display = 'flex';
 }
@@ -1060,6 +1123,35 @@ function saveRevenueRecord(e) {
   if (!customerName || !revenueType || !date || !status || isNaN(grossAmount) || grossAmount <= 0) {
     showToast('Please complete all required valid fields.', 'error');
     return;
+  }
+  
+  if (!ALLOWED_PAYMENT_METHODS.includes(paymentMethod)) {
+    showToast('Please select a valid payment method.', 'error');
+    return;
+  }
+  
+  // Prototype validation only.
+  // Format validation does not verify the actual payment.
+  // Production implementation should verify transactions through the payment provider/bank backend.
+  if (UPI_PAYMENT_METHODS.includes(paymentMethod)) {
+    if (!/^\d{12}$/.test(reference)) {
+      showToast('UPI Transaction Reference / RRN must contain exactly 12 digits.', 'error');
+      return;
+    }
+    
+    const existingRevenues = getRevenue();
+    const isDuplicate = existingRevenues.some(r => 
+      r.reference === reference && String(r.id) !== String(currentRevId)
+    );
+    if (isDuplicate) {
+      showToast('This transaction reference already exists.', 'error');
+      return;
+    }
+  } else {
+    if (!reference) {
+      showToast('Transaction Reference / ID is required.', 'error');
+      return;
+    }
   }
   
   if (platformFee < 0 || operationalCost < 0) {
@@ -1234,13 +1326,31 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         
         <div>
-          <label style="display:block; font-weight:700; margin-bottom:4px; font-size:0.85rem;">Payment Method</label>
-          <input type="text" id="rev-form-payment" class="form-input" placeholder="e.g. UPI, Bank Transfer">
+          <label style="display:block; font-weight:700; margin-bottom:4px; font-size:0.85rem;">Payment Method *</label>
+          <select id="rev-form-payment" class="form-input" required onchange="updatePaymentReferenceField()">
+            <option value="">Select Payment Method</option>
+            <option value="Google Pay">Google Pay</option>
+            <option value="PhonePe">PhonePe</option>
+            <option value="Paytm">Paytm</option>
+            <option value="BHIM">BHIM</option>
+            <option value="Amazon Pay">Amazon Pay</option>
+            <option value="CRED">CRED</option>
+            <option value="MobiKwik">MobiKwik</option>
+            <option value="PayZapp">PayZapp</option>
+            <option value="Airtel Payments Bank">Airtel Payments Bank</option>
+            <option value="WhatsApp Pay">WhatsApp Pay</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Credit Card">Credit Card</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="Cash">Cash</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
         
         <div>
-          <label style="display:block; font-weight:700; margin-bottom:4px; font-size:0.85rem;">Reference / TXN ID</label>
-          <input type="text" id="rev-form-ref" class="form-input" placeholder="e.g. TXN12345678">
+          <label id="rev-form-ref-label" for="rev-form-ref" style="display:block; font-weight:700; margin-bottom:4px; font-size:0.85rem;">Transaction Reference / ID *</label>
+          <input type="text" id="rev-form-ref" class="form-input" placeholder="Enter transaction/reference ID" required autocomplete="off" oninput="validateReferenceInput(this)">
+          <div id="rev-form-ref-helper" style="display:none; color:var(--mid-grey); font-size:0.75rem; margin-top:4px;">Enter the 12-digit UPI transaction reference number (RRN).</div>
         </div>
         
         <div style="grid-column: span 2;">
