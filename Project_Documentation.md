@@ -16,27 +16,31 @@ We have built out several key components to show exactly how the platform works 
 - **Request System:** Receivers can browse what's available and submit requests for specific items. These requests are tied to verified organizations for accountability.
 - **Delivery Tracking:** Users can see the progress of their food requests as they move through stages like "Food Packing," "Out for Delivery," and "Delivered."
 - **User Dashboards:** Dedicated spaces for both donors and receivers to manage their past activity and track current requests.
-- **NGO Registration:** A dedicated onboarding process for trusts and NGOs, allowing them to upload necessary verification documents.
+- **Organizations Directory & Registration:** A dedicated directory with search and filter capabilities for finding verified partner organizations, alongside a robust onboarding process for trusts and NGOs to upload PDF verification documents.
+- **Leaderboard:** A gamified page tracking top contributors, where every meal shared earns community points, encouraging recurring donations.
+- **Financial Support (Demo):** A section where supporters can make simulated financial contributions toward platform operations, complete with a mock payment gateway experience.
 - **Admin Panel:** A comprehensive dashboard where site managers can review and approve new NGO applications and monitor all active food requests.
 
 ## Tech Stack
 We chose a lightweight, straightforward set of technologies to keep the prototype fast and easy to review:
 - **HTML5** for the core layout and page structure.
-- **CSS3** to ensure the design is clean, responsive, and looks great across different screen sizes.
+- **CSS3** (modularized) to ensure the design is clean, responsive, and looks great across different screen sizes.
 - **JavaScript** to handle all the interactive elements, form submissions, and application logic.
-- **Browser LocalStorage** to temporarily save data (like donations and user profiles) to simulate how a real database would work.
+- **Browser LocalStorage** to temporarily save structured data (like donations and user profiles) to simulate how a real database would work.
+- **IndexedDB** to securely store and handle larger data chunks, specifically uploaded PDF documents from organizations.
 
 ## Folder Structure
 The project files are organized in a clean and logical way to separate different parts of the application:
-- `index.html`, `style.css`, `script.js`: These files handle the main public-facing website and user experience.
-- `login.html`, `login.css`, `login.js`: These manage the authentication screens.
-- `admin.html`, `admin.css`, `admin.js`: These power the backend dashboard used by administrators.
-- `README.md`: Contains the technical instructions for setting up and running the demo.
+- **HTML Pages:** Individual modular pages (`index.html`, `donate.html`, `request.html`, `organizations.html`, `fund-support.html`, `leaderboard.html`) representing different platform features.
+- **css/**: Contains modular CSS (`global.css`, `home.css`, `pages.css`) for consistent styling across the application.
+- **js/**: Contains modular JavaScript logic. `storage.js` handles data persistence across LocalStorage and IndexedDB, while `ui.js` manages interface components like modals, toasts, and input validation.
+- **Admin & Auth:** Files like `login.html`, `admin.html`, and their respective JS/CSS files manage authentication screens and the administrative backend.
+- **README.md / Project_Documentation.md:** Technical instructions, setup guides, and project overviews.
 
 ## Project Architecture
 Because this is a prototype, the architecture is entirely client-side. The public pages, admin dashboards, and login screens all run directly in the user's browser. All the business logic—such as handling donations, updating request statuses, and managing admin approvals—is handled by JavaScript. 
 
-Instead of connecting to a remote database, we utilize the browser's local storage capabilities. This approach is perfect for demonstrating the user flows and interface without needing an active internet connection or backend infrastructure.
+Instead of connecting to a remote database, we utilize the browser's local storage capabilities for lightweight data, and IndexedDB for securely managing uploaded PDF documents. This hybrid approach is perfect for demonstrating robust user flows and interface elements without needing an active internet connection or backend infrastructure.
 
 ## Future Enhancements & Improvements
 While the current prototype successfully demonstrates the core concept, there are several exciting ways we can expand the platform for a full-scale public launch:
