@@ -63,22 +63,30 @@ This project is built as a frontend-only demo application using HTML, CSS, and J
 - They can track the request status and see donor and trust details
 - They can see remaining food quantity and trust information
 
-### 8. Trust / NGO Registration
+### 8. Trust / NGO Registration & Directory
+- A dedicated Organizations page where users can search and filter verified partner organizations
 - Trusts and NGOs can register with their name, registration number, type, address, contact person, phone number, email, and service area
-- They must upload required supporting documents:
-  - Registration Certificate
-  - Trust / NGO ID Proof
-  - Address Proof
-- All uploaded documents are stored as Base64 data in localStorage
+- They must upload required supporting documents (Registration Certificate, Trust / NGO ID Proof, Address Proof)
+- All uploaded documents are securely stored in the browser using IndexedDB
 
-### 9. Admin Dashboard
+### 9. Leaderboard (Community Impact)
+- Gamified system to recognize top food donors
+- Points are calculated based on the quantity of food donated (1 person served = 10 points)
+- Users can view the top contributors and overall platform statistics
+
+### 10. Financial Support (Demo)
+- A Fund Support page that allows users to make simulated financial contributions
+- Supports different purposes (General Food Support, Meal Distribution, Platform Operations, etc.)
+- Provides a mock payment gateway experience to demonstrate future monetization or donation handling
+
+### 11. Admin Dashboard
 - Admin login is available through a demo login page
 - Admin can review NGO/trust applications
 - Admin can approve or reject trust/NGO registrations
 - Admin can review incoming food requests and accept or reject them
 - Summary cards show donations, requests, and NGO applications
 
-### 10. Demo Authentication
+### 12. Demo Authentication
 - Built-in demo credentials:
   - Admin: admin / admin123
   - User: user / user123
@@ -92,7 +100,8 @@ This project uses a lightweight frontend stack:
 - HTML5 for structure and UI layout
 - CSS3 for styling and responsive design
 - JavaScript for logic, form handling, DOM updates, and local data processing
-- localStorage for data persistence
+- localStorage for lightweight data persistence (users, requests, food data)
+- IndexedDB for storing uploaded PDF documents (organizations)
 - Python HTTP server for local project execution during development
 
 ---
@@ -101,47 +110,67 @@ This project uses a lightweight frontend stack:
 
 ```text
 food donate/
+├── css/
+│   ├── global.css
+│   ├── home.css
+│   └── pages.css
+├── js/
+│   ├── storage.js
+│   └── ui.js
+├── images/
+├── about.html
 ├── admin.css
 ├── admin.html
 ├── admin.js
+├── donate.html
+├── fund-support.html
 ├── index.html
+├── leaderboard.html
 ├── login.css
 ├── login.html
 ├── login.js
+├── organizations.html
+├── request.html
 ├── script.js
 ├── style.css
 ├── README.md
-└── assets/ (if added later)
+└── Project_Documentation.md
 ```
 
 ### File Breakdown
 
 - `index.html`  
-  Main landing page and user-facing donation/request workflow
+  Main landing page and user-facing workflows.
+
+- `donate.html` & `request.html`  
+  Dedicated pages for donating surplus food and requesting food.
+
+- `organizations.html`  
+  Directory of verified partner organizations and registration form.
+
+- `fund-support.html`  
+  Page for financial contributions and demo payment flows.
+
+- `leaderboard.html`  
+  Community impact leaderboard showing top donors and points.
+
+- `js/storage.js`  
+  Handles localStorage and IndexedDB (document storage) interactions.
+
+- `js/ui.js`  
+  Contains UI utilities like toasts, modals, navbar logic, and form validation.
 
 - `script.js`  
-  Contains the main app logic: donation flow, request management, dashboard logic, trust registration, and status tracking
+  Contains legacy/main app logic for donation flow, request management, and dashboard logic.
 
-- `login.html`  
-  Login page for admin/user access
+- `login.html` & `login.js`  
+  Login page and logic for admin/user access.
 
-- `login.js`  
-  Handles login validation and route redirect logic
+- `admin.html` & `admin.js`  
+  Admin dashboard interface and management logic.
 
-- `admin.html`  
-  Admin dashboard interface
-
-- `admin.js`  
-  Manages admin verification, approvals, rejections, and food request review
-
-- `style.css`  
-  Main styling for the public website
-
-- `login.css`  
-  Styling for the login page
-
-- `admin.css`  
-  Styling for the admin dashboard
+- `css/`  
+  Modular CSS files (`global.css`, `home.css`, `pages.css`) for consistent styling.
 
 ---
 
@@ -162,11 +191,12 @@ The architecture is intentionally simple because the project is a frontend demo 
   - admin actions
 
 ### Data Layer
-- Data is stored in browser localStorage under keys such as:
+- Text and structured data are stored in browser localStorage under keys such as:
   - `foodConnectFoods`
   - `foodConnectTrusts`
   - `foodConnectRole`
-- This makes the app easy to demo and test without a backend
+- Uploaded organization documents (PDFs) are securely stored in the browser's IndexedDB.
+- This hybrid storage approach makes the app easy to demo while handling files robustly.
 
 ### User Role Flow
 
